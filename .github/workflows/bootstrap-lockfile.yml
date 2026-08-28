@@ -1,6 +1,8 @@
 name: Bootstrap lockfile
 on:
   push:
+    branches: [main, production-hardening]
+  pull_request:
     branches: [main]
   workflow_dispatch:
 permissions:
@@ -16,6 +18,7 @@ jobs:
       - name: Generate package-lock.json
         run: npm install
       - name: Commit lockfile when generated
+        if: github.event_name != 'pull_request'
         run: |
           if git diff --quiet -- package-lock.json; then
             echo 'package-lock.json already current'
