@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase';
 import AppSidebar from '@/components/AppSidebar';
 
-type Term = { id: string; term: string; definition: string; example: string | null; subject_id: string | null; subjects?: { name: string } | null };
+type Term = { id: string; term: string; definition: string; example: string | null; subject_id: string | null; subjects?: { name: string }[] | null };
 
 export default function Terminlar() {
   const supabase = useMemo(() => createClient(), []);
@@ -26,7 +26,7 @@ export default function Terminlar() {
       if (!alive) return;
       if (subjectError || termError) setError('Terminlarni yuklashda muammo yuz berdi. Qayta urinib ko‘ring.');
       setSubjects(subjectData ?? []);
-      setTerms((termData ?? []) as Term[]);
+      setTerms(termData ?? []);
       setLoading(false);
     })();
     return () => { alive = false; };
@@ -49,7 +49,7 @@ export default function Terminlar() {
           <div className="glossary-filters"><input aria-label="Termin qidirish" placeholder="Termin yoki ta’rifni qidiring…" value={query} onChange={(e) => setQuery(e.target.value)} /><select aria-label="Fan bo‘yicha filtrlash" value={subjectId} onChange={(e) => setSubjectId(e.target.value)}><option value="">Barcha fanlar</option>{subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
           {error && <div className="error-box" role="alert">{error}</div>}
           {loading && <div className="glossary-grid"><div className="skeleton-card" /><div className="skeleton-card" /><div className="skeleton-card" /></div>}
-          {!loading && filtered.length > 0 && <div className="glossary-grid">{filtered.map((item) => <article className="term-card" key={item.id}><div className="term-meta"><span>{item.subjects?.name || 'Fan'}</span></div><h2>{item.term}</h2><p>{item.definition}</p>{item.example && <div className="term-example"><small>Misol</small><span>{item.example}</span></div>}</article>)}</div>}
+          {!loading && filtered.length > 0 && <div className="glossary-grid">{filtered.map((item) => <article className="term-card" key={item.id}><div className="term-meta"><span>{item.subjects?.[0]?.name || 'Fan'}</span></div><h2>{item.term}</h2><p>{item.definition}</p>{item.example && <div className="term-example"><small>Misol</small><span>{item.example}</span></div>}</article>)}</div>}
           {!loading && !filtered.length && <div className="result-card"><div className="empty-icon">Aa</div><h2>{terms.length ? 'Bu qidiruv bo‘yicha termin topilmadi.' : 'Terminlar bazasi hozircha bo‘sh.'}</h2><p>{terms.length ? 'Boshqa so‘z yoki fan bilan qidirib ko‘ring.' : 'Tasdiqlangan terminlar qo‘shilgach, shu yerda ko‘rinadi.'}</p></div>}
         </section>
       </div>
