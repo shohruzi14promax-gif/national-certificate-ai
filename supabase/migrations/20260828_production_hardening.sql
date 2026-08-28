@@ -27,6 +27,7 @@ from public.subjects s left join public.questions q on q.subject_id=s.id and q.s
 where not exists(select 1 from public.tests t where t.subject_id=s.id and t.title=s.name || ' — Sample Mock')
 group by s.id,s.name
 having count(q.id)>0;
+
 insert into public.test_questions(test_id,question_id,position)
 select t.id,q.id,row_number() over(partition by t.id order by q.created_at,q.id)::integer
 from public.tests t join public.questions q on q.subject_id=t.subject_id and q.status='published' and q.source_type='sample'
