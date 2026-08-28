@@ -10,7 +10,7 @@ const items = [
   { href: '/subjects', label: 'Question Bank', icon: '▣', badge: 'Free' },
   { href: '/subjects', label: 'Fanlar', icon: '♧' },
   { href: '/terminlar', label: 'Terminlar', icon: '▥' },
-  { href: '/study-plan', label: 'Study Plan', icon: '♧', badge: 'AI' },
+  { href: '/study-plan', label: 'Study Plan', icon: '♧' },
 ];
 
 const secondary = [
@@ -32,8 +32,8 @@ export default function AppSidebar() {
   return (
     <aside className="app-sidebar">
       <Link href="/dashboard" className="sidebar-brand">
-        <span className="brand-mark">N</span>
-        <span>National Certificate AI</span>
+        <span className="brand-mark">M</span>
+        <span>MilliyTest</span>
       </Link>
 
       <div className="sidebar-section-label">MENU</div>
@@ -46,7 +46,7 @@ export default function AppSidebar() {
             <Link key={item.label} href={item.href} className={`sidebar-item${active ? ' active' : ''}`}>
               <span className="sidebar-icon">{item.icon}</span>
               <span>{item.label}</span>
-              {item.badge && <span className={`sidebar-badge ${item.badge === 'AI' ? 'ai' : ''}`}>{item.badge}</span>}
+              {item.badge && <span className="sidebar-badge">{item.badge}</span>}
             </Link>
           );
         })}
