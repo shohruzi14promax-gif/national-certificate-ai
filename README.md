@@ -26,7 +26,7 @@ npm run lint
 npm run build
 ```
 
-`package-lock.json` is committed, so CI uses `npm ci` for reproducible installs.
+`package-lock.json` is committed, so CI uses `npm ci` for reproducible installs. The production build requires the two Supabase public environment variables; CI supplies non-secret placeholders only to validate compilation when deployment secrets are not available.
 
 ## Environment variables
 
@@ -109,7 +109,7 @@ npm run lint
 npm run build
 ```
 
-A temporary bootstrap workflow was used to generate the committed lockfile in GitHub Actions; after the lockfile was created, CI is configured to use `npm ci`.
+The latest verified GitHub Actions run passed all four steps: `npm ci`, TypeScript, ESLint, and the Next.js production build.
 
 ## Current limitations
 
