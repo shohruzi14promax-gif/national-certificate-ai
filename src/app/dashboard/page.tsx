@@ -15,23 +15,33 @@ function daysLeft(date?:string|null){
 
 export default function Dashboard(){
   const supabase=createClient();const router=useRouter();
-  const [user,setUser]=useState<any>(null),[profile,setProfile]=useState<any>(null),[subjects,setSubjects]=useState<any[]>([]),[stats,setStats]=useState({attempted:0,correct:0,tests:0,accuracy:0,streak:0}),[weak,setWeak]=useState<any[]>([]),[recent,setRecent]=useState<any[]>([]),[targets,setTargets]=useState<Record<string,string>>({}),[loading,setLoading]=useState(true);
-  useEffect(()=>{(async()=>{
-    const {data:{user}}=await supabase.auth.getUser();if(!user){router.replace('/login');return;}setUser(user);
-    const [{data:p},{data:s},{data:a},{data:progress}]=await Promise.all([
-      supabase.from('profiles').select('*').eq('id',user.id).maybeSingle(),
-      supabase.from('subjects').select('*').order('sort_order'),
-      supabase.from('test_attempts').select('id,correct_count,total_count,score,started_at,completed_at,mode,subject_id').eq('user_id',user.id).order('started_at',{ascending:false}),
-      supabase.from('topic_progress').select('topic_id,accuracy,attempted,correct,topics(name,slug,subject_id,subjects(name))').eq('user_id',user.id).order('accuracy',{ascending:true}).limit(8)
-    ]);
-    setProfile(p);const attempts=a??[];const total=attempts.reduce((n,x)=>n+(x.total_count||0),0);const correct=attempts.reduce((n,x)=>n+(x.correct_count||0),0);const days=new Set(attempts.filter((x:any)=>x.completed_at).map((x:any)=>new Date(x.completed_at).toISOString().slice(0,10)));let streak=0;const cursor=new Date();while(days.has(cursor.toISOString().slice(0,10))){streak++;cursor.setDate(cursor.getDate()-1);}setStats({attempted:total,correct,tests:attempts.length,accuracy:total?Math.round(correct/total*100):0,streak});setRecent(attempts.slice(0,5));setWeak((progress??[]).filter((x:any)=>(x.attempted||0)>0).slice(0,4));setSubjects(s??[]);
-    const saved=typeof window!=='undefined'?localStorage.getItem('nc-targets'):null;if(saved)try{setTargets(JSON.parse(saved))}catch{}
-    setLoading(false);
-  })()},[router,supabase]);
-  if(loading)return <main className="state-page">Yuklanmoqda…</main>;
+  const [user,setUser]=useState<any>(null),[profile,setProfile]=useState<any>(null),[subjects,setSubjects]=useState<any[]>([]),[stats,setStats]=useState({attempted:0,correct:0,tests:0,accuracy:0,streak:0}),[weak,setWeak]=useState<any[]>([]),[recent,setRecent]=useState<any[]>([]),[targets,setTargets]=useState<Record<string,string>>({});
+  useEffect(()=>{let alive=true;(async()=>{
+    const {data:{user}}=await supabase.auth.getUser();
+    if(!user){router.replace('/login');return;}
+    if(!alive)return;setUser(user);
+    const saved=typeof window!=='undefined'?localStorage.getItem('nc-targets'):null;
+    if(saved)try{setTargets(JSON.parse(saved))}catch{}
+    // Render the dashboard shell immediately. Database data is hydrated in the background,
+    // so navigation never gets stuck behind a Supabase request.
+    try{
+      const [{data:p},{data:s},{data:a},{data:progress}]=await Promise.all([
+        supabase.from('profiles').select('*').eq('id',user.id).maybeSingle(),
+        supabase.from('subjects').select('*').order('sort_order'),
+        supabase.from('test_attempts').select('id,correct_count,total_count,score,started_at,completed_at,mode,subject_id').eq('user_id',user.id).order('started_at',{ascending:false}),
+        supabase.from('topic_progress').select('topic_id,accuracy,attempted,correct,topics(name,slug,subject_id,subjects(name))').eq('user_id',user.id).order('accuracy',{ascending:true}).limit(8)
+      ]);
+      if(!alive)return;
+      setProfile(p);const attempts=a??[];const total=attempts.reduce((n,x)=>n+(x.total_count||0),0);const correct=attempts.reduce((n,x)=>n+(x.correct_count||0),0);const days=new Set(attempts.filter((x:any)=>x.completed_at).map((x:any)=>new Date(x.completed_at).toISOString().slice(0,10)));let streak=0;const cursor=new Date();while(days.has(cursor.toISOString().slice(0,10))){streak++;cursor.setDate(cursor.getDate()-1);}setStats({attempted:total,correct,tests:attempts.length,accuracy:total?Math.round(correct/total*100):0,streak});setRecent(attempts.slice(0,5));setWeak((progress??[]).filter((x:any)=>(x.attempted||0)>0).slice(0,4));setSubjects(s??[]);
+    }catch(error){
+      // Keep the UI usable even if the database is temporarily unavailable.
+      console.error('Dashboard data load failed',error);
+    }
+  })();return()=>{alive=false}},[router,supabase]);
   const hasActivity=stats.attempted>0;const examDate=profile?.exam_date;const totalDays=daysLeft(examDate);
   function setTarget(id:string,value:string){const next={...targets,[id]:value};setTargets(next);localStorage.setItem('nc-targets',JSON.stringify(next));}
-  return <main className="dashboard-layout"><AppSidebar/><div className="dashboard-content"><header className="dashboard-topbar"><div className="dashboard-mobile-brand"><span className="brand-mark">N</span> National Certificate AI</div><nav><Link href="/tutor">Tutor</Link><Link href="/study-plan">Study Plan</Link><Link href="/profile">Profil</Link></nav></header>
+  if(!user)return <main className="dashboard-layout"><AppSidebar/><div className="dashboard-content"><section className="dash-wrap"><div className="dash-head"><div><div className="kicker">STUDENT DASHBOARD</div><h1>Dashboard</h1><p>Tayyorgarlik maydoni yuklanmoqda...</p></div></div></section></div></main>;
+  return <main className="dashboard-layout"><AppSidebar/><div className="dashboard-content"><header className="dashboard-topbar"><div className="dashboard-mobile-brand"><span className="brand-mark">N</span> MilliyTest</div><nav><Link href="/tutor">Tutor</Link><Link href="/study-plan">Study Plan</Link><Link href="/profile">Profil</Link></nav></header>
     <section className="dash-wrap">
       <div className="dash-head"><div><div className="kicker">STUDENT DASHBOARD</div><h1>Salom, {profile?.name||user?.email?.split('@')[0]||'Student'}!</h1><p>{hasActivity?'Bugungi tayyorgarlikni natijalaringizdan kelib chiqib davom ettiring.':'Hozircha natijalar yo‘q. Birinchi practice testni boshlang.'}</p></div><Link className="primary" href="/practice">Practice boshlash →</Link></div>
       <div className="stats"><div><b>{stats.accuracy}%</b><span>Aniqlik</span></div><div><b>{stats.attempted}</b><span>Savol yechildi</span></div><div><b>{stats.correct}</b><span>To‘g‘ri javob</span></div><div><b>{stats.streak}</b><span>Kunlik streak</span></div></div>
