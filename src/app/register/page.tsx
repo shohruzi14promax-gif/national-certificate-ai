@@ -20,8 +20,6 @@ export default function RegisterPage() {
     setError('');
 
     try {
-      // Registration is handled server-side so the service-role key never
-      // reaches the browser. The server creates the user as already confirmed.
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -35,7 +33,6 @@ export default function RegisterPage() {
         return;
       }
 
-      // Create the normal browser session after the confirmed account exists.
       const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
       if (loginError) {
         setError('Hisob yaratildi, lekin avtomatik kirish ishlamadi. Iltimos, Kirish orqali davom eting.');
@@ -54,7 +51,7 @@ export default function RegisterPage() {
   return (
     <main className="auth-page">
       <div className="auth-card">
-        <Link href="/" className="brand"><span className="brand-mark">N</span> National Certificate AI</Link>
+        <Link href="/" className="brand"><span className="brand-mark">M</span> MilliyTest</Link>
         <div className="kicker">RO‘YXATDAN O‘TISH</div>
         <h1>Tayyorgarlikni boshlang.</h1>
         <p>Bepul hisob yarating va natijalaringizni saqlang.</p>
