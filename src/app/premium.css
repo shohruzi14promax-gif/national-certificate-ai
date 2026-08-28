@@ -2,40 +2,42 @@
 :root{--mt-cream:#faf9f6;--mt-paper:#fffdf9;--mt-brown:#171310;--mt-brown-2:#2b211b;--mt-bronze:#b8894a;--mt-bronze-light:#f3e9da;--mt-line:#e7ddd0}
 html{scroll-behavior:smooth}
 body{background:var(--mt-cream);color:var(--mt-brown);transition:background .35s ease,color .35s ease}
-/* Elegant page entrance */
 .landing,.dashboard-layout,.practice-shell,.plan-page,.auth-page,.subject-page,.tutor-page{animation:mtPageIn .55s cubic-bezier(.2,.75,.25,1) both}
 @keyframes mtPageIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-/* Premium navigation */
-.topbar,.dashboard-topbar,.app-sidebar{transition:box-shadow .3s ease,border-color .3s ease,background .3s ease}
+.topbar,.dashboard-topbar,.app-sidebar{transition:box-shadow .3s ease,border-color .3s ease,background .3s ease,width .3s cubic-bezier(.2,.8,.2,1)}
 .topbar:hover{box-shadow:0 16px 48px rgba(72,49,27,.1)}
 .brand-mark{transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s ease}
 .brand:hover .brand-mark,.sidebar-brand:hover .brand-mark{transform:rotate(-4deg) scale(1.05);box-shadow:0 10px 24px rgba(48,34,23,.2)}
-/* Refined buttons */
 .button,.primary,.nav-cta,.sidebar-upgrade,.secondary,.nav-button{transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s ease,background .22s ease,border-color .22s ease}
 .button-main,.primary,.nav-cta{position:relative;overflow:hidden}
 .button-main:after,.primary:after,.nav-cta:after{content:"";position:absolute;inset:0;transform:translateX(-120%) skewX(-18deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);transition:transform .6s ease}
 .button-main:hover:after,.primary:hover:after,.nav-cta:hover:after{transform:translateX(120%) skewX(-18deg)}
 .button-main:hover,.primary:hover,.nav-cta:hover,.sidebar-upgrade:hover{transform:translateY(-3px)}
 .button-ghost:hover,.secondary:hover,.nav-button:hover{transform:translateY(-2px)}
-/* Cards: subtle lift, not excessive */
 .panel,.stats>div,.subject,.feature,.step,.exam-subject,.question-card,.result-card,.form-card,.generated,.chat-card,.topic-card,.test-list .panel,.bank-question,.subject-grid .panel,.feature-card{transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s ease,border-color .3s ease,background .3s ease}
 .panel:hover,.question-card:hover,.result-card:hover,.form-card:hover,.generated:hover,.chat-card:hover{transform:translateY(-3px);box-shadow:0 18px 45px rgba(70,48,28,.08);border-color:#d9c4a8}
 .subject:hover,.feature:hover,.step:hover,.exam-subject:hover,.topic-card:hover,.bank-question:hover{transform:translateY(-6px);box-shadow:0 22px 48px rgba(70,48,28,.1);border-color:#ceb28d}
-/* Landing hero ambient motion */
 .hero-bg{animation:mtGlow 9s ease-in-out infinite alternate}
 @keyframes mtGlow{from{transform:scale(1);opacity:.8}to{transform:scale(1.035);opacity:1}}
 .hero-grid{animation:mtGrid 14s linear infinite}
 @keyframes mtGrid{from{background-position:0 0}to{background-position:56px 56px}}
 .eyebrow .dot{animation:mtPulse 2.2s ease-in-out infinite}
 @keyframes mtPulse{0%,100%{box-shadow:0 0 0 4px #f0e4d4,0 0 0 0 rgba(184,137,74,0)}50%{box-shadow:0 0 0 4px #f0e4d4,0 0 0 8px rgba(184,137,74,.08)}}
-/* Smooth link/icon movement */
 .subject-arrow,.dash-subject>span:last-child{transition:transform .25s ease,color .25s ease}
 .subject:hover .subject-arrow,.dash-subject:hover>span:last-child{transform:translateX(5px);color:var(--mt-bronze)}
-/* Dashboard progress shimmer */
 .sidebar-progress span,.dash-line span{position:relative;overflow:hidden}
 .sidebar-progress span:after,.dash-line span:after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);animation:mtShimmer 2.6s ease-in-out infinite}
 @keyframes mtShimmer{to{transform:translateX(100%)}}
-/* Focus states */
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--mt-bronze);outline-offset:3px}
-/* Respect reduced motion */
+/* Collapsible desktop sidebar */
+.sidebar-collapse{position:absolute;top:18px;right:-13px;width:27px;height:27px;border:1px solid #d9dee7;border-radius:50%;background:#fff;color:#475467;display:grid;place-items:center;font-size:18px;line-height:1;z-index:30;box-shadow:0 5px 16px rgba(16,24,40,.12);transition:transform .25s ease,box-shadow .25s ease,background .25s ease}
+.sidebar-collapse:hover{transform:scale(1.08);background:#f8fafc;box-shadow:0 8px 22px rgba(16,24,40,.16)}
+.app-sidebar.collapsed{width:78px;padding-left:10px;padding-right:10px}
+.app-sidebar.collapsed .sidebar-brand{justify-content:center;padding-left:0;padding-right:0}
+.app-sidebar.collapsed .sidebar-brand-text,.app-sidebar.collapsed .sidebar-section-label,.app-sidebar.collapsed .sidebar-item-text,.app-sidebar.collapsed .sidebar-badge,.app-sidebar.collapsed .sidebar-streak,.app-sidebar.collapsed .sidebar-upgrade{display:none}
+.app-sidebar.collapsed .sidebar-item{justify-content:center;padding-left:8px;padding-right:8px}
+.app-sidebar.collapsed .sidebar-icon{font-size:18px}
+.dashboard-layout:has(.app-sidebar.collapsed) .dashboard-content{width:calc(100% - 78px);margin-left:78px}
+@media(max-width:1050px) and (min-width:761px){.app-sidebar.collapsed{width:72px}.dashboard-layout:has(.app-sidebar.collapsed) .dashboard-content{width:calc(100% - 72px);margin-left:72px}}
+@media(max-width:760px){.sidebar-collapse{display:none}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
