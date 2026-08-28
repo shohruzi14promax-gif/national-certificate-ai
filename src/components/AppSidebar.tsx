@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase';
 
 const items = [
   { href: '/dashboard', label: 'Home', icon: '⌂' },
@@ -20,6 +21,13 @@ const secondary = [
 
 export default function AppSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const supabase = createClient();
+
+  async function logout() {
+    await supabase.auth.signOut();
+    router.replace('/');
+  }
 
   return (
     <aside className="app-sidebar">
@@ -60,6 +68,10 @@ export default function AppSidebar() {
             <span>{item.label}</span>
           </Link>
         ))}
+        <button type="button" className="sidebar-item sidebar-logout" onClick={logout}>
+          <span className="sidebar-icon">↪</span>
+          <span>Chiqish</span>
+        </button>
       </nav>
     </aside>
   );
