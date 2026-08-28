@@ -1,0 +1,1 @@
+import Link from 'next/link'; export default function NotFound(){return <main className="state-page"><div><div className="kicker">404</div><h1>Sahifa topilmadi.</h1><p>Bu manzil mavjud emas.</p><Link className="primary" href="/">Bosh sahifa →</Link></div></main>}
