@@ -1,30 +1,4 @@
 'use client';
-
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { createClient } from '@/lib/supabase';
-
-const fallbackSubjects = [
-  ['Matematika','∑','matematika'], ['Tarix','⌘','tarix'], ['Kimyo','⚗','kimyo'],
-  ['Biologiya','⌬','biologiya'], ['Ona tili va adabiyot','Aa','ona-tili-adabiyot'],
-];
-
-export default function Dashboard() {
-  const [user, setUser] = useState<any>(null);
-  const [subjects, setSubjects] = useState<any[]>([]);
-  const supabase = createClient();
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
-    supabase.from('subjects').select('*').order('sort_order').then(({ data }) => setSubjects(data ?? []));
-  }, []);
-
-  return <main className="dash-shell">
-    <header className="dash-nav"><Link href="/" className="brand"><span className="brand-mark">N</span> National Certificate AI</Link><div className="dash-user">{user?.email ?? 'Student'}</div></header>
-    <section className="dash-wrap">
-      <div className="dash-head"><div><div className="kicker">STUDENT DASHBOARD</div><h1>Bugun nimani o‘rganamiz?</h1><p>Darajangizni oshiring va imtihonga ishonch bilan boring.</p></div><Link className="primary" href="/practice">Practice boshlash →</Link></div>
-      <div className="stats"><div><b>0%</b><span>Umumiy progress</span></div><div><b>0</b><span>Savol yechildi</span></div><div><b>0%</b><span>Aniqlik</span></div><div><b>0 🔥</b><span>Streak</span></div></div>
-      <div className="dash-grid"><section className="panel"><div className="panel-title"><h2>Fanlar</h2><span>5 ta fan</span></div><div className="subject-list">{(subjects.length ? subjects.map(s => [s.name,s.icon,s.slug]) : fallbackSubjects).map(([name,icon,slug]) => <Link href={`/subjects/${slug}`} className="dash-subject" key={slug}><span className="subject-icon">{icon}</span><div><b>{name}</b><small>0% progress</small></div><span>→</span></Link>)}</div></section><aside className="panel plan"><div className="kicker">AI STUDY PLAN</div><h2>Imtihon sanangizni kiriting</h2><p>AI sizning vaqtingiz va natijalaringiz asosida har bir fan uchun alohida reja tuzadi.</p><Link href="/study-plan" className="secondary">Study Plan tuzish</Link></aside></div>
-    </section>
-  </main>;
-}
+import {useEffect,useState} from 'react'; import Link from 'next/link'; import {useRouter} from 'next/navigation'; import {createClient} from '@/lib/supabase';
+const fallback=[['Matematika','∑','matematika'],['Tarix','⌘','tarix'],['Kimyo','⚗','kimyo'],['Biologiya','⌬','biologiya'],['Ona tili va adabiyot','Aa','ona-tili-adabiyot']];
+export default function Dashboard(){const supabase=createClient();const router=useRouter();const [user,setUser]=useState<any>(null),[profile,setProfile]=useState<any>(null),[subjects,setSubjects]=useState<any[]>([]),[stats,setStats]=useState({attempted:0,correct:0,tests:0,accuracy:0}),[loading,setLoading]=useState(true);useEffect(()=>{(async()=>{const {data:{user}}=await supabase.auth.getUser();if(!user){router.replace('/login');return;}setUser(user);const [{data:p},{data:s},{data:a},{data:answers}]=await Promise.all([supabase.from('profiles').select('*').eq('id',user.id).maybeSingle(),supabase.from('subjects').select('*').order('sort_order'),supabase.from('test_attempts').select('id,correct_count,total_count').eq('user_id',user.id),supabase.from('answers').select('id,is_correct').eq('attempt_id',user.id)]);setProfile(p);const attempts=a??[];const total=attempts.reduce((n,x)=>n+(x.total_count||0),0);const correct=attempts.reduce((n,x)=>n+(x.correct_count||0),0);setStats({attempted:total,correct,tests:attempts.length,accuracy:total?Math.round(correct/total*100):0});setSubjects(s??[]);setLoading(false)})()},[router,supabase]);async function logout(){await supabase.auth.signOut();router.replace('/')}if(loading)return <main className="state-page">Yuklanmoqda…</main>;return <main className="dash-shell"><header className="dash-nav"><Link href="/" className="brand"><span className="brand-mark">N</span> National Certificate AI</Link><nav className="dash-actions"><Link href="/tutor">Tutor</Link><Link href="/study-plan">Study Plan</Link><button className="link-button" onClick={logout}>Chiqish</button></nav></header><section className="dash-wrap"><div className="dash-head"><div><div className="kicker">STUDENT DASHBOARD</div><h1>Salom, {profile?.name||user?.email?.split('@')[0]||'Student'}.</h1><p>Bugungi tayyorgarlikni natijalaringizdan kelib chiqib davom ettiring.</p></div><Link className="primary" href="/practice">Practice boshlash →</Link></div><div className="stats"><div><b>{stats.accuracy}%</b><span>Aniqlik</span></div><div><b>{stats.attempted}</b><span>Savol yechildi</span></div><div><b>{stats.correct}</b><span>To‘g‘ri javob</span></div><div><b>{stats.tests}</b><span>Testlar</span></div></div><div className="dash-grid"><section className="panel"><div className="panel-title"><h2>Fanlar</h2><span>{subjects.length||5} ta fan</span></div><div className="subject-list">{(subjects.length?subjects:fallback.map(x=>({name:x[0],icon:x[1],slug:x[2]}))).map((s:any)=><Link href={`/subjects/${s.slug}`} className="dash-subject" key={s.slug}><span className="subject-icon">{s.icon}</span><div><b>{s.name}</b><small>Natijalarni ko‘rish</small></div><span>→</span></Link>)}</div></section><aside className="panel plan"><div className="kicker">KEYINGI QADAM</div><h2>Imtihongacha reja tuzing.</h2><p>Exam date, target score va kunlik vaqtni kiriting. Reja zaif mavzular bo‘yicha ustuvorlik beradi.</p><Link href="/study-plan" className="secondary">Study Plan →</Link></aside></div></section></main>}
