@@ -1,12 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
 
 export default function RegisterPage() {
-  const supabase = useMemo(() => createClient(), []);
+  const supabase = createClient();
   const router = useRouter();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -19,29 +19,36 @@ export default function RegisterPage() {
     setLoading(true);
     setError('');
 
-    const { data, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { name } },
-    });
+    try {
+      // Registration is handled server-side so the service-role key never
+      // reaches the browser. The server creates the user as already confirmed.
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+      });
+      const result = await response.json();
 
-    if (signUpError) {
-      setError(signUpError.message);
-      setLoading(false);
-      return;
-    }
+      if (!response.ok) {
+        setError(result.error || 'Ro‘yxatdan o‘tishda xatolik yuz berdi.');
+        setLoading(false);
+        return;
+      }
 
-    // With Supabase email confirmation disabled, signup returns a session
-    // and the user goes straight into the application.
-    if (data.session) {
+      // Create the normal browser session after the confirmed account exists.
+      const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+      if (loginError) {
+        setError('Hisob yaratildi, lekin avtomatik kirish ishlamadi. Iltimos, Kirish orqali davom eting.');
+        setLoading(false);
+        return;
+      }
+
       router.push('/dashboard');
-      return;
+      router.refresh();
+    } catch {
+      setError('Server bilan bog‘lanib bo‘lmadi. Keyinroq qayta urinib ko‘ring.');
+      setLoading(false);
     }
-
-    // Do not present an email-confirmation flow in the product. If Supabase
-    // returns no session, its Auth configuration still requires confirmation.
-    setError('Avtomatik kirish ishlamadi. Supabase Auth sozlamasida email confirmation o‘chirilganini tekshiring.');
-    setLoading(false);
   }
 
   return (
