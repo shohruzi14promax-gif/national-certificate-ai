@@ -7,41 +7,11 @@ Uzbekistan-focused preparation platform for National Certificate exams. The prod
 ## Stack
 
 - Next.js App Router + React + TypeScript
-- Tailwind-compatible CSS/design system (current MVP keeps the existing lightweight CSS system)
+- Existing lightweight CSS design system
 - Supabase Auth + PostgreSQL + Storage
 - Vercel
 
-## Current MVP
-
-- Five database-driven subjects and topics
-- Supabase email/password authentication and password recovery
-- Protected dashboard, practice, mock exam, study plan, profile and tutor routes
-- Published question bank with separate `question_options` and a safe student-facing `practice_questions` view
-- Practice attempts, answer submission, scoring and topic progress
-- Timed mock exam simulation
-- Adaptive study-plan generation from exam date, target score and topic performance
-- Secure AI tutor architecture with provider abstraction
-- Structured AI question-generation API with Zod validation
-- Server-authorized admin dashboard and question creation
-- RLS policies for user-owned data
-
-## Environment variables
-
-Set these in `.env.local` for local development and in Vercel project settings for deployment:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
-
-# Optional AI tutor / question generation provider
-AI_PROVIDER_BASE_URL=
-AI_PROVIDER_API_KEY=
-AI_MODEL=
-```
-
-Never put `SUPABASE_SERVICE_ROLE_KEY` or AI provider secrets in client code or `NEXT_PUBLIC_*` variables.
-
-## Local setup
+## Setup
 
 ```bash
 npm install
@@ -56,37 +26,95 @@ npm run lint
 npm run build
 ```
 
-## Supabase setup
+`package-lock.json` is committed, so CI uses `npm ci` for reproducible installs.
 
-The production MVP schema was applied to the connected project on 2026-08-28.
+## Environment variables
 
-Repository schema assets:
+Create `.env.local` locally and configure the same variables in the Vercel project:
 
-- `supabase/migrations/20260828_mvp.sql` — core tables, RLS, auth trigger and answer submission function
-- `supabase/migrations/20260828_lock_correct_answers.sql` — prevents students from selecting `is_correct` directly and exposes only the safe practice view
-- `supabase/seed.sql` — non-official sample subjects/topics/questions
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 
-The connected project contains the five seeded subjects and 15 published sample questions. Storage buckets for avatars and question images are configured in the production migration.
+# Optional AI provider
+AI_PROVIDER_BASE_URL=
+AI_PROVIDER_API_KEY=
+AI_MODEL=
+```
+
+Never put `SUPABASE_SERVICE_ROLE_KEY`, `AI_PROVIDER_API_KEY`, or other private credentials in client code or `NEXT_PUBLIC_*` variables.
+
+## Supabase
+
+Production schema/migrations are kept in `supabase/migrations/`.
+
+Important migrations:
+
+- `20260828_mvp.sql` — core application schema, RLS and answer RPC
+- `20260828_lock_correct_answers.sql` — safe student question surface
+- `20260828_production_hardening.sql` — final answer-leak/RLS hardening and sample mock seed architecture
+
+Seed data:
+
+- `supabase/seed.sql` — five subjects, database-driven topics and 15 non-official sample questions
+
+The connected Supabase project has the required 19 public tables, RLS enabled on all of them, five subjects, 15 published sample questions, and sample mock tests linked to published sample questions.
 
 ## Authentication
 
-Supabase Auth handles email/password registration, login, session persistence and password recovery. A database trigger creates `profiles` and a default `student` role for new users. Admin authorization is based on `public.user_roles`, not editable user metadata.
+Supabase Auth provides registration, login, logout, session persistence and password recovery. A database trigger creates a profile and default `student` role. Authorization uses `public.user_roles`, never editable profile metadata.
+
+For Supabase Auth, configure the deployed origin plus `/reset-password` as an allowed redirect URL. For local development, also allow `http://localhost:3000/reset-password`.
+
+## Admin setup
+
+The first admin must be assigned server-side in Supabase. Replace the UUID with the authenticated user's real ID:
+
+```sql
+insert into public.user_roles (user_id, role)
+values ('USER_UUID_HERE', 'admin')
+on conflict (user_id) do update set role = 'admin';
+```
+
+Do not use `profiles` or client metadata to grant admin access.
+
+Unauthorized `/admin` access redirects to `/login` when unauthenticated and back to `/dashboard` when authenticated without the admin role. Admin APIs return `403` for insufficient role.
 
 ## Question safety
 
-Students do not receive the correct answer through the normal practice question surface. `question_options.is_correct` is restricted to admin operations; student practice uses `practice_questions`, which contains only option text/key/order. Answer checking occurs server-side through the `submit_answer` RPC.
+Students never receive `question_options.is_correct` through the normal question surface. The published question policy is blocked for direct option reads; practice loads a safe representation without `is_correct`, and `submit_answer` checks the answer server-side. AI-generated content is stored with `source_type = ai_generated` and is never presented as official exam material.
 
-## Seed content
+## Study Plan
 
-All included questions are labeled as `source_type = sample` and are not presented as official exam questions. More verified/licensed content can be imported later through the admin question-bank workflow.
+The Study Plan accepts exam date, target score, current level, daily study minutes and selected subjects. It uses actual `topic_progress` accuracy/attempt counts to prioritize weak or unattempted topics and increases mock/review activities near the exam date. Selected subjects are persisted to `user_subjects`.
 
-## Production deployment
+## AI
 
-Connect the GitHub repository to Vercel, add the environment variables above, and deploy with the standard Next.js build command. Configure Supabase Auth redirect URLs to include the deployed application origin and `/reset-password`.
+Tutor and question generation are server-side only. When the AI variables are absent, the Tutor explicitly reports that configuration is missing. When configured, requests use the provider abstraction and generated questions are validated with Zod before they can be stored.
 
-## Remaining limitations
+AI has not been declared operational without a configured provider credential.
 
-- AI Tutor and AI question generation are fully wired server-side but require an external AI provider credential before they can call a model.
-- CSV/JSON bulk import UI and full admin CRUD for subjects/tests are architecture-ready but not yet a complete polished interface.
-- Avatar/question-image upload UI is not yet surfaced in the MVP pages, although Storage buckets and RLS policies are present.
-- A dedicated end-to-end browser test suite should be added before a large public launch.
+## Vercel
+
+The repository is Vercel-compatible as a standard Next.js App Router project. Add the environment variables, connect the GitHub repository to the intended Vercel project, and configure Supabase Auth redirect URLs. The currently connected Vercel account does not expose a `national-certificate-ai` project to the available Vercel connector, so deployment cannot be honestly marked verified from this environment.
+
+## CI
+
+`.github/workflows/ci.yml` runs:
+
+```text
+npm ci
+npm run typecheck
+npm run lint
+npm run build
+```
+
+A temporary bootstrap workflow was used to generate the committed lockfile in GitHub Actions; after the lockfile was created, CI is configured to use `npm ci`.
+
+## Current limitations
+
+- AI Tutor/question generation require an external AI provider credential for live model calls.
+- CSV/JSON import has a validated admin API; a full drag-and-drop import UI is not yet surfaced.
+- Avatar/question-image upload UI is not yet surfaced, although storage policies are configured.
+- Full browser end-to-end authentication testing requires a real test account and configured Supabase Auth redirects.
+- Vercel deployment cannot be claimed as verified until the intended Vercel project is accessible/connected.
