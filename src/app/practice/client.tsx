@@ -125,7 +125,9 @@ export default function PracticeClient() {
   }, [draftKey, loading, started, done]);
 
   useEffect(() => {
-    if (started && remaining === 0 && !done) void finishAttempt();
+    if (!started || remaining !== 0 || done) return;
+    const timer = window.setTimeout(() => { void finishAttempt(); }, 0);
+    return () => window.clearTimeout(timer);
   }, [remaining, started, done, finishAttempt]);
 
   const formatTime = (seconds: number) => `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
