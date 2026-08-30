@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase';
 import AppSidebar from '@/components/AppSidebar';
@@ -12,7 +12,7 @@ const grades = [
 const scoreToGrade = (score: number | null) => grades.find((item) => item.score === score)?.label || 'B+';
 
 export default function Profile() {
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const [profile, setProfile] = useState<any>({});
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -23,7 +23,8 @@ export default function Profile() {
     let alive = true;
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!alive) return;
+      if (!user) { setLoading(false); return; }
       const { data, error: loadError } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
       if (!alive) return;
       if (loadError) setError('Profilni yuklashda muammo yuz berdi.');
