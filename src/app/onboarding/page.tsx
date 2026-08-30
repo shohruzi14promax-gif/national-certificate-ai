@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
 
@@ -14,7 +14,7 @@ const grades = [
 ];
 
 export default function OnboardingPage() {
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
   const [name, setName] = useState('');
   const [subjects, setSubjects] = useState<any[]>([]);
@@ -34,7 +34,7 @@ export default function OnboardingPage() {
         supabase.from('subjects').select('id,name,icon').order('sort_order'),
       ]);
       if (!alive) return;
-      if (!user) { router.replace('/login'); return; }
+      if (!user) { setLoading(false); router.replace('/login'); return; }
       setName(user.user_metadata?.name || '');
       if (subjectError) setError('Fanlarni yuklashda muammo yuz berdi.');
       const list = data ?? [];
@@ -51,7 +51,7 @@ export default function OnboardingPage() {
     setSaving(true);
     setError('');
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { router.replace('/login'); return; }
+    if (!user) { setError('Sessiya topilmadi. Qayta kiring.'); setSaving(false); return; }
     const grade = grades.find((item) => item.label === target) || grades[3];
     const { error: profileError } = await supabase.from('profiles').upsert({
       id: user.id,
