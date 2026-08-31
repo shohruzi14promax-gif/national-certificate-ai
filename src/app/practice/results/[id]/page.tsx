@@ -38,7 +38,12 @@ export default async function PracticeResult({ params }: { params: Promise<{ id:
         <section className="practice-wrap result-page">
           <div className="kicker">PRACTICE · NATIJA</div>
           <div className="result-hero">
-            <div><p className="result-label">Natijangiz</p><h1>{score.toFixed(0)}%</h1><p>{(attempt.subjects as any)?.name || 'Aralash practice'} · {attempt.completed_at ? new Date(attempt.completed_at).toLocaleDateString('uz-UZ') : 'Yakunlangan'}</p></div>
+            <div className="result-score-wrap">
+              <div className="result-score" style={{ '--score': score } as React.CSSProperties} aria-label={`Natija ${score.toFixed(0)} foiz`}>
+                <span className="result-score-value">{score.toFixed(0)}%</span>
+              </div>
+              <div><p className="result-label">Natijangiz</p><p>{(attempt.subjects as any)?.name || 'Aralash practice'} · {attempt.completed_at ? new Date(attempt.completed_at).toLocaleDateString('uz-UZ') : 'Yakunlangan'}</p></div>
+            </div>
             <Link className="primary" href="/practice">Yana practice →</Link>
           </div>
           <div className="result-stats"><div><strong>{attempt.correct_count || 0}</strong><span>To‘g‘ri</span></div><div><strong>{incorrect}</strong><span>Noto‘g‘ri</span></div><div><strong>{unanswered}</strong><span>Javobsiz</span></div><div><strong>{minutes}:{String(seconds).padStart(2, '0')}</strong><span>Vaqt</span></div></div>
