@@ -39,7 +39,7 @@ export default async function PracticeResult({ params }: { params: Promise<{ id:
           <div className="kicker">PRACTICE · NATIJA</div>
           <div className="result-hero">
             <div className="result-score-wrap">
-              <div className="result-score" style={{ '--score': score } as React.CSSProperties} aria-label={`Natija ${score.toFixed(0)} foiz`}>
+              <div className="result-score" style={{ ['--score' as string]: score }} aria-label={`Natija ${score.toFixed(0)} foiz`}>
                 <span className="result-score-value">{score.toFixed(0)}%</span>
               </div>
               <div><p className="result-label">Natijangiz</p><p>{(attempt.subjects as any)?.name || 'Aralash practice'} · {attempt.completed_at ? new Date(attempt.completed_at).toLocaleDateString('uz-UZ') : 'Yakunlangan'}</p></div>
