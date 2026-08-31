@@ -1,0 +1,3 @@
+import {NextResponse} from 'next/server';
+import {requireAdmin} from '@/lib/auth';
+export async function GET(req:Request){try{const {supabase}=await requireAdmin();const subjectId=new URL(req.url).searchParams.get('subjectId');const [{data:subjects,error:se},{data:topics,error:te}]=await Promise.all([supabase.from('subjects').select('id,name').order('sort_order'),supabase.from('topics').select('id,name,subject_id').eq(subjectId?'subject_id':'id',subjectId||'00000000-0000-0000-0000-000000000000').order('sort_order')]);if(se)throw se;if(te)throw te;return NextResponse.json({subjects:subjects??[],topics:topics??[]});}catch(e:any){return NextResponse.json({error:e?.message||'Catalog could not be loaded'},{status:e?.message==='FORBIDDEN'?403:500});}}
