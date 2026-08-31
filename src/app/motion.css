@@ -1,0 +1,373 @@
+/* MilliyTest premium motion system
+   Motion-only layer: transform + opacity first, short durations, no runtime dependency. */
+:root {
+  --mt-motion-fast: 180ms;
+  --mt-motion-base: 260ms;
+  --mt-motion-slow: 340ms;
+  --mt-motion-ease: cubic-bezier(.22,.72,.22,1);
+}
+
+@keyframes mt-enter-up {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes mt-enter-soft {
+  from { opacity: 0; transform: scale(.985); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes mt-drawer-in {
+  from { opacity: 0; transform: translate3d(-14px, 0, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes mt-ring-in {
+  from { opacity: 0; transform: scale(.94); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Initial page surfaces */
+.landing-page,
+.auth-page,
+.onboarding-page,
+.dashboard-layout,
+.practice-wrap,
+.plan-wrap,
+.subject-wrap,
+.tutor-wrap,
+.result-page {
+  animation: mt-enter-soft var(--mt-motion-slow) var(--mt-motion-ease) both;
+}
+
+.landing-nav,
+.landing-page .topbar,
+.dash-nav,
+.dashboard-topbar {
+  animation: mt-enter-up var(--mt-motion-base) var(--mt-motion-ease) both;
+}
+
+/* Landing: editorial reveal, kept one-shot */
+.landing-page .hero-copy > * {
+  animation: mt-enter-up var(--mt-motion-slow) var(--mt-motion-ease) both;
+}
+.landing-page .hero-copy > :nth-child(2) { animation-delay: 50ms; }
+.landing-page .hero-copy > :nth-child(3) { animation-delay: 100ms; }
+.landing-page .hero-copy > :nth-child(4) { animation-delay: 150ms; }
+.landing-page .hero-copy > :nth-child(5) { animation-delay: 190ms; }
+.landing-page .product-stage {
+  animation: mt-enter-soft 360ms var(--mt-motion-ease) 90ms both;
+}
+
+.landing-page .feature-card,
+.landing-page .feature,
+.landing-page .subject,
+.landing-page .step {
+  animation: mt-enter-up 320ms var(--mt-motion-ease) both;
+}
+.landing-page .feature-card:nth-child(2),
+.landing-page .feature:nth-child(2),
+.landing-page .subject:nth-child(2),
+.landing-page .step:nth-child(2) { animation-delay: 45ms; }
+.landing-page .feature-card:nth-child(3),
+.landing-page .feature:nth-child(3),
+.landing-page .subject:nth-child(3),
+.landing-page .step:nth-child(3) { animation-delay: 90ms; }
+.landing-page .feature-card:nth-child(4),
+.landing-page .feature:nth-child(4),
+.landing-page .subject:nth-child(4),
+.landing-page .step:nth-child(4) { animation-delay: 135ms; }
+
+.landing-cta,
+.landing-page .button-main,
+.landing-page .button-ghost,
+.landing-page .nav-cta,
+.primary,
+.secondary,
+.nav-button {
+  transition: transform var(--mt-motion-fast) var(--mt-motion-ease),
+    opacity var(--mt-motion-fast) ease,
+    background-color var(--mt-motion-fast) ease,
+    border-color var(--mt-motion-fast) ease,
+    box-shadow var(--mt-motion-fast) ease;
+}
+
+.landing-cta:hover,
+.landing-page .button-main:hover,
+.landing-page .button-ghost:hover,
+.landing-page .nav-cta:hover,
+.primary:hover:not(:disabled),
+.secondary:hover:not(:disabled),
+.nav-button:hover:not(:disabled) {
+  transform: translate3d(0, -2px, 0);
+}
+
+/* Shared cards: only hover/focus motion, never continuous shadow animation. */
+.panel,
+.stats > div,
+.question-card,
+.result-card,
+.form-card,
+.generated,
+.chat-card,
+.topic-card,
+.test-list .panel,
+.bank-question,
+.term-card,
+.subject-grid .panel,
+.exam-subject,
+.feature-card,
+.feature,
+.subject,
+.step {
+  transition: transform var(--mt-motion-base) var(--mt-motion-ease),
+    border-color var(--mt-motion-base) ease,
+    box-shadow var(--mt-motion-base) ease;
+}
+
+.panel:hover,
+.stats > div:hover,
+.question-card:hover,
+.result-card:hover,
+.form-card:hover,
+.generated:hover,
+.chat-card:hover,
+.topic-card:hover,
+.test-list .panel:hover,
+.bank-question:hover,
+.term-card:hover,
+.subject-grid .panel:hover,
+.exam-subject:hover,
+.feature-card:hover,
+.feature:hover,
+.subject:hover,
+.step:hover {
+  transform: translate3d(0, -3px, 0);
+}
+
+/* Auth / onboarding */
+.auth-card,
+.onboarding-card {
+  animation: mt-enter-up 320ms var(--mt-motion-ease) both;
+}
+.auth-card input,
+.auth-card select,
+.auth-card textarea,
+.onboarding-card input,
+.onboarding-card select,
+.onboarding-card textarea,
+.form-card input,
+.form-card select,
+.form-card textarea,
+.chat-card textarea,
+.glossary-filters input,
+.glossary-filters select {
+  transition: border-color var(--mt-motion-fast) ease, box-shadow var(--mt-motion-fast) ease;
+}
+.onboarding-progress span,
+.exam-progress span,
+.sidebar-progress span,
+.dash-line span {
+  transition: width 300ms var(--mt-motion-ease);
+}
+
+/* Dashboard */
+.stats > div,
+.dashboard-content .panel,
+.dashboard-content .exam-panel,
+.dashboard-content .dash-grid > * {
+  animation: mt-enter-up 300ms var(--mt-motion-ease) both;
+}
+.stats > div:nth-child(2) { animation-delay: 45ms; }
+.stats > div:nth-child(3) { animation-delay: 90ms; }
+.stats > div:nth-child(4) { animation-delay: 135ms; }
+.dashboard-content .dash-grid > :nth-child(2) { animation-delay: 70ms; }
+
+/* Sidebar: collapse is a width/layout change, so keep it off the animation hot path. */
+.app-sidebar {
+  transition: width 260ms var(--mt-motion-ease), transform 260ms var(--mt-motion-ease),
+    box-shadow 220ms ease, border-color 220ms ease;
+}
+.app-sidebar.collapsed .sidebar-item-text,
+.app-sidebar.collapsed .sidebar-brand-text,
+.app-sidebar.collapsed .sidebar-section-label,
+.app-sidebar.collapsed .sidebar-badge,
+.app-sidebar.collapsed .sidebar-focus {
+  transition: opacity 160ms ease;
+}
+.sidebar-item {
+  transition: transform var(--mt-motion-fast) var(--mt-motion-ease),
+    background-color var(--mt-motion-fast) ease,
+    color var(--mt-motion-fast) ease;
+}
+.sidebar-item:hover { transform: translate3d(2px, 0, 0); }
+.sidebar-item.active { transition: background-color 180ms ease, color 180ms ease, transform 180ms var(--mt-motion-ease); }
+.sidebar-collapse { transition: transform 200ms var(--mt-motion-ease), box-shadow 200ms ease; }
+.sidebar-collapse:hover { transform: scale(1.04); }
+
+/* Practice: question changes are keyed by question id in JSX, so the entrance restarts without timers. */
+.exam-question {
+  animation: mt-enter-up 240ms var(--mt-motion-ease) both;
+}
+.options .option {
+  transition: transform var(--mt-motion-fast) var(--mt-motion-ease),
+    border-color var(--mt-motion-fast) ease,
+    background-color var(--mt-motion-fast) ease,
+    box-shadow var(--mt-motion-fast) ease;
+}
+.options .option:hover:not(:disabled) { transform: translate3d(0, -1px, 0); }
+.options .option.selected { animation: mt-enter-soft 180ms var(--mt-motion-ease) both; }
+.question-nav button,
+.review-toggle {
+  transition: transform var(--mt-motion-fast) var(--mt-motion-ease),
+    background-color var(--mt-motion-fast) ease,
+    border-color var(--mt-motion-fast) ease;
+}
+.question-nav button:hover:not(:disabled),
+.review-toggle:hover { transform: translate3d(0, -1px, 0); }
+.exam-timer.danger { animation: mt-enter-soft 260ms var(--mt-motion-ease) both; }
+
+/* Results */
+.result-score {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 124px;
+  height: 124px;
+  flex: 0 0 124px;
+  border-radius: 50%;
+  background: conic-gradient(var(--mt-violet) calc(var(--score, 0) * 1%), var(--mt-soft-lavender) 0);
+  animation: mt-ring-in 340ms var(--mt-motion-ease) both;
+}
+.result-score::before {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  background: var(--mt-white);
+}
+.result-score-value {
+  position: relative;
+  z-index: 1;
+  font: 700 28px/1 Inter, ui-sans-serif, system-ui, sans-serif;
+  color: var(--mt-deep-purple);
+  letter-spacing: -.04em;
+}
+.result-stats > div,
+.review-list .review-card {
+  animation: mt-enter-up 280ms var(--mt-motion-ease) both;
+}
+.result-stats > div:nth-child(2),
+.review-list .review-card:nth-child(2) { animation-delay: 45ms; }
+.result-stats > div:nth-child(3),
+.review-list .review-card:nth-child(3) { animation-delay: 90ms; }
+.result-stats > div:nth-child(4),
+.review-list .review-card:nth-child(4) { animation-delay: 135ms; }
+
+/* Question Bank / glossary / analytics / study plan */
+.qb-filters > *,
+.admin-toolbar > *,
+.glossary-filters > * {
+  transition: transform var(--mt-motion-fast) var(--mt-motion-ease),
+    border-color var(--mt-motion-fast) ease,
+    box-shadow var(--mt-motion-fast) ease;
+}
+.question-bank-list > *,
+.glossary-grid > *,
+.analytics-grid > *,
+.plan-wrap > .panel,
+.test-list > * {
+  animation: mt-enter-up 280ms var(--mt-motion-ease) both;
+}
+.question-bank-list > :nth-child(2),
+.glossary-grid > :nth-child(2),
+.analytics-grid > :nth-child(2) { animation-delay: 45ms; }
+.question-bank-list > :nth-child(3),
+.glossary-grid > :nth-child(3) { animation-delay: 90ms; }
+.question-bank-list > :nth-child(4),
+.glossary-grid > :nth-child(4) { animation-delay: 135ms; }
+
+/* Analytics charts/progress bars: entrance only; data and calculations remain untouched. */
+.analytics-grid svg,
+.analytics-grid canvas,
+.analytics-chart,
+.chart,
+.performance-bar {
+  animation: mt-enter-soft 300ms var(--mt-motion-ease) both;
+}
+
+/* AI Tutor */
+.assistant-bubble {
+  animation: mt-enter-up 260ms var(--mt-motion-ease) both;
+}
+.chat-card .primary:disabled {
+  opacity: .72;
+}
+
+/* Admin surfaces */
+.admin-grid > *,
+.admin-list > *,
+.admin-question {
+  animation: mt-enter-up 280ms var(--mt-motion-ease) both;
+}
+.admin-list > :nth-child(2) { animation-delay: 45ms; }
+.admin-list > :nth-child(3) { animation-delay: 90ms; }
+.admin-list > :nth-child(4) { animation-delay: 135ms; }
+.modal-backdrop {
+  animation: mt-enter-soft 180ms ease both;
+}
+.modal {
+  animation: mt-enter-up 240ms var(--mt-motion-ease) both;
+}
+.modal-actions .primary:disabled { opacity: .65; }
+.success-box,
+.error-box {
+  animation: mt-enter-up 220ms var(--mt-motion-ease) both;
+}
+
+/* Mobile: shorter distances and fewer staggered layers. */
+@media (max-width: 760px) {
+  .landing-page .hero-copy > *,
+  .landing-page .feature-card,
+  .landing-page .feature,
+  .landing-page .subject,
+  .landing-page .step,
+  .stats > div,
+  .dashboard-content .panel,
+  .question-bank-list > *,
+  .glossary-grid > *,
+  .admin-list > * {
+    animation-duration: 220ms;
+  }
+
+  .landing-page .hero-copy > :nth-child(n + 4),
+  .landing-page .feature-card:nth-child(n + 4),
+  .landing-page .feature:nth-child(n + 4),
+  .landing-page .subject:nth-child(n + 4),
+  .landing-page .step:nth-child(n + 4) {
+    animation-delay: 0ms;
+  }
+
+  .app-sidebar {
+    transition: transform 240ms var(--mt-motion-ease), box-shadow 200ms ease;
+  }
+
+  .result-score {
+    width: 104px;
+    height: 104px;
+    flex-basis: 104px;
+  }
+}
+
+/* Accessibility: user preference always wins. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
