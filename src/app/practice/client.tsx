@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
@@ -37,7 +37,9 @@ export default function PracticeClient() {
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const finishingRef = useRef(false);
   const draftKey = `milliytest-practice:${subjectId || 'all'}:${topicId || 'all'}:${difficulty || 'all'}:${count}`;
 
   useEffect(() => {
@@ -81,7 +83,9 @@ export default function PracticeClient() {
   }, [draftKey]);
 
   const finishAttempt = useCallback(async () => {
-    if (!attemptId || done) return;
+    if (!attemptId || done || finishingRef.current) return;
+    finishingRef.current = true;
+    setSubmitting(true);
     try {
       const { data: allAnswers } = await supabase.from('answers').select('is_correct').eq('attempt_id', attemptId);
       const correct = (allAnswers ?? []).filter((answer: any) => answer.is_correct).length;
@@ -94,6 +98,8 @@ export default function PracticeClient() {
       setDone(true);
       router.push(`/practice/results/${attemptId}`);
     } catch {
+      finishingRef.current = false;
+      setSubmitting(false);
       setError('Natijani saqlashda muammo yuz berdi. Qayta urinib ko‘ring.');
     }
   }, [attemptId, done, draftKey, durationSeconds, questions.length, router, startedAt, supabase]);
@@ -125,10 +131,20 @@ export default function PracticeClient() {
   }, [draftKey, loading, started, done]);
 
   useEffect(() => {
-    if (!started || remaining !== 0 || done) return;
+    if (!started || done || remaining !== 0) return;
     const timer = window.setTimeout(() => { void finishAttempt(); }, 0);
     return () => window.clearTimeout(timer);
   }, [remaining, started, done, finishAttempt]);
+
+  useEffect(() => {
+    if (!started || done) return;
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [started, done]);
 
   const formatTime = (seconds: number) => `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
 
@@ -152,17 +168,31 @@ export default function PracticeClient() {
     } finally { setStarting(false); }
   };
 
+  const goToQuestion = (nextIndex: number) => {
+    const safeIndex = Math.min(Math.max(nextIndex, 0), questions.length - 1);
+    setIndex(safeIndex);
+    persistDraft({ questions, attemptId, index: safeIndex, answers, marked, startedAt, durationSeconds });
+  };
+
   const submitCurrent = async () => {
+    if (submitting || finishingRef.current) return;
     const q = questions[index];
     const selected = answers[q?.id];
     if (!q || !selected) return;
+    if (index + 1 >= questions.length && !window.confirm('Testni yakunlashni xohlaysizmi? Javoblaringiz natijaga yuboriladi.')) return;
+    setSubmitting(true);
     setError('');
     const { error: answerError } = await supabase.rpc('submit_answer', { p_attempt_id: attemptId, p_question_id: q.id, p_selected_answer: selected, p_time_spent_seconds: 0 });
-    if (answerError) { setError('Javobni saqlashda muammo yuz berdi. Qayta urinib ko‘ring.'); return; }
+    if (answerError) {
+      setSubmitting(false);
+      setError('Javobni saqlashda muammo yuz berdi. Qayta urinib ko‘ring.');
+      return;
+    }
     if (index + 1 >= questions.length) { await finishAttempt(); return; }
     const nextIndex = index + 1;
     setIndex(nextIndex);
     persistDraft({ questions, attemptId, index: nextIndex, answers, marked, startedAt, durationSeconds });
+    setSubmitting(false);
   };
 
   const chooseAnswer = (key: string) => {
@@ -197,14 +227,14 @@ export default function PracticeClient() {
             {error && <div className="error-box" role="alert">{error}</div>}<button className="primary" onClick={start} disabled={starting}>{starting ? 'Tayyorlanmoqda…' : 'Practice boshlash →'}</button>
           </div></>}
           {started && !done && q && <div className="exam-shell">
-            <div className="exam-toolbar"><div><strong>{index + 1}</strong><span>/ {questions.length}</span></div><div className={`exam-timer${remaining < 60 ? ' danger' : ''}`} aria-live="polite">◷ {formatTime(remaining)}</div><button type="button" className={`review-toggle${marked.includes(q.id) ? ' active' : ''}`} onClick={toggleMark}>{marked.includes(q.id) ? 'Belgilangan' : 'Ko‘rib chiqish uchun belgilash'}</button></div>
-            <div className="exam-progress"><span style={{ width: `${((index + 1) / questions.length) * 100}%` }} /></div>
+            <div className="exam-toolbar"><div><strong>{index + 1}</strong><span>/ {questions.length}</span></div><div className={`exam-timer${remaining < 60 ? ' danger' : ''}`} aria-live="polite">◷ {formatTime(remaining)}</div><button type="button" className={`review-toggle${marked.includes(q.id) ? ' active' : ''}`} onClick={toggleMark} aria-pressed={marked.includes(q.id)}>{marked.includes(q.id) ? 'Belgilangan' : 'Ko‘rib chiqish uchun belgilash'}</button></div>
+            <div className="exam-progress" role="progressbar" aria-valuemin={1} aria-valuemax={questions.length} aria-valuenow={index + 1}><span style={{ width: `${((index + 1) / questions.length) * 100}%` }} /></div>
             <div key={q.id} className="question-card exam-question"><div className="question-meta"><span>{q.difficulty === 'easy' ? 'Oson' : q.difficulty === 'hard' ? 'Qiyin' : 'O‘rta'}</span><span>{Object.keys(answers).length} ta javob saqlangan</span></div><h1>{q.text}</h1>
-              <div className="options">{q.options.map((option, i) => <button key={option.id} type="button" className={answers[q.id] === option.key ? 'option selected' : 'option'} onClick={() => chooseAnswer(option.key)}><span>{String.fromCharCode(65 + i)}</span>{option.text}</button>)}</div>
+              <div className="options" role="group" aria-label={`Javob variantlari, ${index + 1}-savol`}>{q.options.map((option, i) => <button key={option.id} type="button" className={answers[q.id] === option.key ? 'option selected' : 'option'} onClick={() => chooseAnswer(option.key)} aria-pressed={answers[q.id] === option.key}><span aria-hidden="true">{String.fromCharCode(65 + i)}</span>{option.text}</button>)}</div>
               {error && <div className="error-box" role="alert">{error}</div>}
-              <div className="exam-actions"><button className="secondary" type="button" onClick={() => setIndex((value) => Math.max(0, value - 1))} disabled={index === 0}>← Oldingi</button><button className="primary" type="button" onClick={submitCurrent} disabled={!answers[q.id]}>{index + 1 === questions.length ? 'Testni yakunlash →' : 'Keyingi savol →'}</button></div>
+              <div className="exam-actions"><button className="secondary" type="button" onClick={() => goToQuestion(index - 1)} disabled={index === 0 || submitting}>← Oldingi</button><button className="primary" type="button" onClick={submitCurrent} disabled={!answers[q.id] || submitting}>{submitting ? 'Saqlanmoqda…' : index + 1 === questions.length ? 'Testni yakunlash →' : 'Keyingi savol →'}</button></div>
             </div>
-            <div className="question-nav" aria-label="Savol navigatsiyasi">{questions.map((item, i) => <button key={item.id} type="button" className={`${i === index ? 'current ' : ''}${answers[item.id] ? 'answered ' : ''}${marked.includes(item.id) ? 'marked' : ''}`} onClick={() => setIndex(i)} aria-label={`${i + 1}-savol`}>{i + 1}</button>)}</div>
+            <div className="question-nav" aria-label="Savol navigatsiyasi">{questions.map((item, i) => <button key={item.id} type="button" className={`${i === index ? 'current ' : ''}${answers[item.id] ? 'answered ' : ''}${marked.includes(item.id) ? 'marked' : ''}`} onClick={() => goToQuestion(i)} disabled={submitting} aria-current={i === index ? 'step' : undefined} aria-label={`${i + 1}-savol${answers[item.id] ? ', javob berilgan' : ', javobsiz'}${marked.includes(item.id) ? ', ko‘rib chiqish uchun belgilangan' : ''}`}>{i + 1}</button>)}</div>
           </div>}
         </section>
       </div>
