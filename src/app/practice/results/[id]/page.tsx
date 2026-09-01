@@ -26,7 +26,7 @@ export default async function PracticeResult({ params }: { params: Promise<{ id:
   if (!attempt) notFound();
 
   const admin = createAdminClient();
-  const { data: answerRows } = await admin.from('answers').select('question_id,selected_answer,is_correct,questions(id,text,explanation,difficulty,topic_id,topics(name),question_options(option_key,option_text,sort_order))').eq('attempt_id', id).order('answered_at');
+  const { data: answerRows } = await admin.from('answers').select('question_id,selected_answer,is_correct,questions(id,text,explanation,difficulty,topic_id,topics(name),question_options(option_key,option_text,sort_order,is_correct))').eq('attempt_id', id).order('answered_at');
   const review = ((answerRows ?? []).map((row: any) => {
     const question = Array.isArray(row.questions) ? row.questions[0] : row.questions;
     const options = ((question?.question_options ?? []) as any[]).sort((a, b) => Number(a.sort_order) - Number(b.sort_order));
