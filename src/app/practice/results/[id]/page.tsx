@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import AppSidebar from '@/components/AppSidebar';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 type Review = {
   question_id: string;
@@ -18,11 +19,29 @@ type Review = {
 export default async function PracticeResult({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data: attempt } = await supabase.from('test_attempts').select('id,score,correct_count,total_count,time_spent_seconds,completed_at,mode,subject_id,subjects(name)').eq('id', id).maybeSingle();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) notFound();
+
+  const { data: attempt } = await supabase.from('test_attempts').select('id,score,correct_count,total_count,time_spent_seconds,completed_at,mode,subject_id,subjects(name)').eq('id', id).eq('user_id', user.id).maybeSingle();
   if (!attempt) notFound();
 
-  const { data: reviewData } = await supabase.rpc('attempt_review', { p_attempt_id: id });
-  const review = (reviewData ?? []) as Review[];
+  const admin = createAdminClient();
+  const { data: answerRows } = await admin.from('answers').select('question_id,selected_answer,is_correct,questions(id,text,explanation,difficulty,topic_id,topics(name),question_options(option_key,option_text,sort_order))').eq('attempt_id', id).order('answered_at');
+  const review = ((answerRows ?? []).map((row: any) => {
+    const question = Array.isArray(row.questions) ? row.questions[0] : row.questions;
+    const options = ((question?.question_options ?? []) as any[]).sort((a, b) => Number(a.sort_order) - Number(b.sort_order));
+    return {
+      question_id: row.question_id,
+      text: question?.text ?? 'Savol mavjud emas.',
+      explanation: question?.explanation ?? null,
+      difficulty: question?.difficulty ?? 'medium',
+      topic_name: Array.isArray(question?.topics) ? question?.topics[0]?.name ?? null : question?.topics?.name ?? null,
+      selected_answer: row.selected_answer ?? null,
+      correct_answer: options.find((option) => option.is_correct)?.option_key ?? null,
+      is_correct: Boolean(row.is_correct),
+      options: options.map((option) => ({ key: option.option_key, text: option.option_text })),
+    } satisfies Review;
+  })) as Review[];
   const answered = review.length;
   const unanswered = Math.max(0, Number(attempt.total_count || 0) - answered);
   const incorrect = Math.max(0, answered - Number(attempt.correct_count || 0));
