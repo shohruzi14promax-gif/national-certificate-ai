@@ -83,47 +83,20 @@ export default function PracticeClient() {
   const finishAttempt = useCallback(async () => {
     if (!attemptId || done) return;
     try {
-      const { data: allAnswers, error: answersError } = await supabase.from('answers').select('question_id,is_correct').eq('attempt_id', attemptId);
-      if (answersError) throw answersError;
+      const { data: allAnswers } = await supabase.from('answers').select('is_correct').eq('attempt_id', attemptId);
       const correct = (allAnswers ?? []).filter((answer: any) => answer.is_correct).length;
       const elapsed = durationSeconds ? Math.min(durationSeconds, Math.max(0, Math.floor((Date.now() - startedAt) / 1000))) : 0;
       const { error: updateError } = await supabase.from('test_attempts').update({ completed_at: new Date().toISOString(), correct_count: correct, score: questions.length ? Math.round((correct / questions.length) * 10000) / 100 : 0, time_spent_seconds: elapsed }).eq('id', attemptId);
       if (updateError) throw updateError;
-
-      const topicByQuestion = new Map(questions.map((question) => [question.id, question.topic_id]));
-      const topicTotals = new Map<string, { attempted: number; correct: number }>();
-      for (const answer of allAnswers ?? []) {
-        const topic = topicByQuestion.get(answer.question_id);
-        if (!topic) continue;
-        const current = topicTotals.get(topic) ?? { attempted: 0, correct: 0 };
-        current.attempted += 1;
-        if (answer.is_correct) current.correct += 1;
-        topicTotals.set(topic, current);
-      }
-      if (topicTotals.size) {
-        const topicIds = [...topicTotals.keys()];
-        const { data: existingProgress, error: progressError } = await supabase.from('topic_progress').select('topic_id,attempted,correct').eq('user_id', (await supabase.auth.getUser()).data.user?.id ?? '').in('topic_id', topicIds);
-        if (progressError) throw progressError;
-        const existing = new Map((existingProgress ?? []).map((row: any) => [row.topic_id, row]));
-        const progressRows = topicIds.map((topicId) => {
-          const previous = existing.get(topicId);
-          const delta = topicTotals.get(topicId)!;
-          const attempted = Number(previous?.attempted ?? 0) + delta.attempted;
-          const correctForTopic = Number(previous?.correct ?? 0) + delta.correct;
-          return { user_id: (await supabase.auth.getUser()).data.user?.id, topic_id: topicId, attempted, correct: correctForTopic, accuracy: attempted ? Math.round((correctForTopic / attempted) * 10000) / 100 : 0 };
-        });
-        if (progressRows.some((row: any) => !row.user_id)) throw new Error('UNAUTHORIZED');
-        const { error: upsertError } = await supabase.from('topic_progress').upsert(progressRows, { onConflict: 'user_id,topic_id' });
-        if (upsertError) throw upsertError;
-      }
-
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData.user) await supabase.rpc('refresh_topic_progress', { p_user_id: userData.user.id });
       try { localStorage.removeItem(draftKey); } catch {}
       setDone(true);
       router.push(`/practice/results/${attemptId}`);
     } catch {
       setError('Natijani saqlashda muammo yuz berdi. Qayta urinib ko‘ring.');
     }
-  }, [attemptId, done, draftKey, durationSeconds, questions, router, startedAt, supabase]);
+  }, [attemptId, done, draftKey, durationSeconds, questions.length, router, startedAt, supabase]);
 
   useEffect(() => {
     if (loading || started || done) return;
@@ -164,13 +137,9 @@ export default function PracticeClient() {
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) { router.push('/login'); return; }
-      let query = supabase.from('practice_questions').select('id,subject_id,topic_id,text,question_type,difficulty,explanation,options').limit(Math.min(Math.max(count, MIN_QUESTIONS), MAX_QUESTIONS));
-      if (subjectId) query = query.eq('subject_id', subjectId);
-      if (topicId) query = query.eq('topic_id', topicId);
-      if (difficulty) query = query.eq('difficulty', difficulty);
-      const { data, error: questionError } = await query;
-      if (questionError) throw questionError;
-      const qs = ((data ?? []) as any[]).map((question) => ({ ...question, options: Array.isArray(question.options) ? question.options.map((option: any) => ({ id: option.id, text: option.text, key: option.key })) : [] })).filter((question) => question.options.length > 0) as Q[];
+      const { data, error: rpcError } = await supabase.rpc('practice_questions', { p_subject_id: subjectId || null, p_topic_id: topicId || null, p_difficulty: difficulty || null, p_limit: Math.min(Math.max(count, MIN_QUESTIONS), MAX_QUESTIONS) });
+      if (rpcError) throw rpcError;
+      const qs = (data || []) as Q[];
       if (!qs.length) throw new Error('Tanlangan filtrlar bo‘yicha savol topilmadi.');
       const { data: attempt, error: attemptError } = await supabase.from('test_attempts').insert({ user_id: userData.user.id, subject_id: subjectId || null, total_count: qs.length, mode: 'practice' }).select('id').single();
       if (attemptError) throw attemptError;
