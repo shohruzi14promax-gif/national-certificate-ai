@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./premium.css";
+import "./brand.css";
+import "./motion.css";
+import "./reference.css";
 
 export const metadata: Metadata = {
   title: "MilliyTest",

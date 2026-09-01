@@ -1,0 +1,346 @@
+/* MilliyTest editorial reference layer
+   Inspired by the supplied premium ed-tech dashboard reference.
+   Brand, data, routing and behavior remain unchanged. */
+
+:root {
+  --mt-ref-bg: #f3f4f6;
+  --mt-ref-surface: #ffffff;
+  --mt-ref-border: #e6e8ec;
+  --mt-ref-text: #171923;
+  --mt-ref-muted: #7b8190;
+  --mt-ref-accent: var(--mt-purple, #5b3db3);
+  --mt-ref-accent-strong: var(--mt-deep-purple, #2b1d4f);
+  --mt-ref-radius: 14px;
+}
+
+/* App shell: compact editorial dashboard proportions */
+.dashboard-layout {
+  background: var(--mt-ref-bg);
+}
+
+.app-sidebar {
+  width: 224px;
+  padding: 16px 10px;
+  background: #f8f8f9;
+  border-right: 1px solid var(--mt-ref-border);
+}
+
+.sidebar-brand {
+  padding: 2px 9px 22px;
+}
+
+.sidebar-nav {
+  gap: 3px;
+}
+
+.sidebar-item {
+  min-height: 39px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  letter-spacing: -.01em;
+}
+
+.sidebar-item.active {
+  background: var(--mt-ref-accent-strong);
+  box-shadow: none;
+}
+
+.sidebar-item:hover {
+  transform: none;
+}
+
+.dashboard-content {
+  width: calc(100% - 224px);
+  margin-left: 224px;
+  background: var(--mt-ref-bg);
+}
+
+.dashboard-topbar {
+  height: 62px;
+  padding: 0 30px;
+  background: rgba(255,255,255,.94);
+  backdrop-filter: blur(8px);
+  border-bottom-color: var(--mt-ref-border);
+}
+
+.dashboard-topbar nav {
+  gap: 24px;
+  font-size: 13px;
+}
+
+.dashboard-content .dash-wrap,
+.dash-wrap,
+.subject-wrap {
+  max-width: 1220px;
+  padding: 32px 26px 64px;
+}
+
+.dashboard-content .dash-head {
+  padding-top: 0;
+}
+
+.dash-head h1,
+.practice-wrap h1,
+.plan-wrap > h1,
+.subject-hero h1,
+.tutor-wrap h1 {
+  font-size: clamp(30px, 3.2vw, 42px);
+  letter-spacing: -.045em;
+  line-height: 1.05;
+  margin: 8px 0;
+}
+
+.kicker {
+  font-size: 10px;
+  letter-spacing: .16em;
+}
+
+/* Reference-style metric cards */
+.stats {
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.stats > div,
+.panel,
+.question-card,
+.result-card,
+.form-card,
+.generated,
+.chat-card,
+.bank-question,
+.term-card,
+.auth-card,
+.subject-grid .panel,
+.exam-subject,
+.test-list .panel {
+  border-radius: var(--mt-ref-radius);
+  border-color: var(--mt-ref-border);
+  box-shadow: 0 1px 2px rgba(23,25,35,.025);
+}
+
+.stats > div {
+  padding: 19px;
+}
+
+.stats > div:hover,
+.panel:hover,
+.question-card:hover,
+.result-card:hover,
+.form-card:hover,
+.generated:hover,
+.chat-card:hover,
+.subject-grid .panel:hover {
+  box-shadow: 0 10px 24px rgba(43,29,79,.07);
+}
+
+.stats b {
+  font-size: 29px;
+}
+
+.dash-grid {
+  gap: 12px;
+}
+
+.panel-title h2 {
+  font-size: 18px;
+}
+
+.panel-title span,
+.stats span,
+.dash-subject small {
+  font-size: 11px;
+}
+
+/* Clean blue/purple reference-style action language */
+.primary {
+  background: var(--mt-ref-accent);
+  border-radius: 10px;
+  padding: 11px 17px;
+  box-shadow: none;
+}
+
+.primary:hover {
+  background: var(--mt-ref-accent-strong);
+  box-shadow: 0 7px 18px rgba(91,61,179,.16);
+}
+
+.secondary,
+.nav-button {
+  border-radius: 10px;
+  padding: 10px 15px;
+}
+
+/* Practice / Question Bank: compact test-platform composition */
+.practice-wrap,
+.plan-wrap,
+.tutor-wrap {
+  max-width: 1060px;
+  padding: 38px 26px 64px;
+}
+
+.question-card,
+.bank-question,
+.result-card,
+.chat-card {
+  padding: 24px;
+}
+
+.bank-question h2 {
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+.bank-options > div {
+  border-radius: 10px;
+  transition: transform 180ms var(--mt-motion-ease), border-color 180ms ease, background-color 180ms ease;
+}
+
+.bank-options > div:hover {
+  transform: translate3d(0,-1px,0);
+  border-color: var(--mt-light-violet);
+  background: #faf8ff;
+}
+
+.qb-filters {
+  gap: 10px;
+}
+
+/* Results / analytics */
+.result-score {
+  box-shadow: 0 8px 22px rgba(91,61,179,.10);
+}
+
+.analytics-grid,
+.result-stats {
+  gap: 12px;
+}
+
+/* Auth: restrained, premium, editorial */
+.auth-page {
+  background: var(--mt-ref-bg);
+}
+
+.auth-card {
+  width: min(440px, 100%);
+  padding: 32px;
+  border-radius: 16px;
+  box-shadow: 0 18px 50px rgba(43,29,79,.08);
+}
+
+.auth-card h1 {
+  font-size: 38px;
+}
+
+/* Admin: dense but breathable management UI */
+.admin-grid {
+  gap: 12px;
+}
+
+.admin-list {
+  gap: 9px;
+}
+
+/* Landing keeps its own editorial composition but gets the same restraint */
+.landing .topbar {
+  height: 68px;
+}
+
+.landing .button-main,
+.landing .nav-cta {
+  border-radius: 10px;
+}
+
+.landing .subject,
+.landing .feature,
+.landing .step {
+  border-radius: 14px;
+}
+
+/* Mobile mirrors the reference: compact, touch-friendly, no horizontal overflow */
+@media (max-width: 1050px) {
+  .app-sidebar {
+    width: 210px;
+  }
+
+  .dashboard-content {
+    width: calc(100% - 210px);
+    margin-left: 210px;
+  }
+}
+
+@media (max-width: 760px) {
+  .dashboard-content {
+    width: 100%;
+    margin-left: 0;
+    padding-bottom: 66px;
+  }
+
+  .app-sidebar {
+    width: 100%;
+    padding: 6px;
+    background: rgba(255,255,255,.98);
+    backdrop-filter: blur(10px);
+  }
+
+  .sidebar-nav {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .sidebar-item {
+    min-height: 50px;
+    border-radius: 9px;
+    font-size: 9px;
+  }
+
+  .dashboard-topbar {
+    height: 56px;
+    padding: 0 16px;
+  }
+
+  .dashboard-topbar nav {
+    gap: 13px;
+    font-size: 11px;
+  }
+
+  .dashboard-content .dash-wrap,
+  .dash-wrap,
+  .subject-wrap,
+  .practice-wrap,
+  .plan-wrap,
+  .tutor-wrap {
+    padding: 24px 16px 44px;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+    margin: 18px 0;
+  }
+
+  .stats > div {
+    padding: 15px;
+  }
+
+  .stats b {
+    font-size: 25px;
+  }
+
+  .dash-head h1,
+  .practice-wrap h1,
+  .plan-wrap > h1,
+  .subject-hero h1,
+  .tutor-wrap h1 {
+    font-size: 30px;
+  }
+
+  .question-card,
+  .bank-question,
+  .result-card,
+  .chat-card,
+  .form-card {
+    padding: 18px;
+    border-radius: 13px;
+  }
+}
