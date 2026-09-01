@@ -168,10 +168,32 @@ export default function PracticeClient() {
     } finally { setStarting(false); }
   };
 
-  const goToQuestion = (nextIndex: number) => {
+  const saveCurrentAnswer = async () => {
+    const q = questions[index];
+    const selected = answers[q?.id];
+    if (!q || !selected) return true;
+    const { error: answerError } = await supabase.rpc('submit_answer', { p_attempt_id: attemptId, p_question_id: q.id, p_selected_answer: selected, p_time_spent_seconds: 0 });
+    if (answerError) {
+      setError('Javobni saqlashda muammo yuz berdi. Qayta urinib ko‘ring.');
+      return false;
+    }
+    return true;
+  };
+
+  const goToQuestion = async (nextIndex: number) => {
+    if (submitting || finishingRef.current) return;
     const safeIndex = Math.min(Math.max(nextIndex, 0), questions.length - 1);
+    if (safeIndex === index) return;
+    setSubmitting(true);
+    setError('');
+    const saved = await saveCurrentAnswer();
+    if (!saved) {
+      setSubmitting(false);
+      return;
+    }
     setIndex(safeIndex);
     persistDraft({ questions, attemptId, index: safeIndex, answers, marked, startedAt, durationSeconds });
+    setSubmitting(false);
   };
 
   const submitCurrent = async () => {
@@ -182,10 +204,9 @@ export default function PracticeClient() {
     if (index + 1 >= questions.length && !window.confirm('Testni yakunlashni xohlaysizmi? Javoblaringiz natijaga yuboriladi.')) return;
     setSubmitting(true);
     setError('');
-    const { error: answerError } = await supabase.rpc('submit_answer', { p_attempt_id: attemptId, p_question_id: q.id, p_selected_answer: selected, p_time_spent_seconds: 0 });
-    if (answerError) {
+    const saved = await saveCurrentAnswer();
+    if (!saved) {
       setSubmitting(false);
-      setError('Javobni saqlashda muammo yuz berdi. Qayta urinib ko‘ring.');
       return;
     }
     if (index + 1 >= questions.length) { await finishAttempt(); return; }
@@ -232,9 +253,9 @@ export default function PracticeClient() {
             <div key={q.id} className="question-card exam-question"><div className="question-meta"><span>{q.difficulty === 'easy' ? 'Oson' : q.difficulty === 'hard' ? 'Qiyin' : 'O‘rta'}</span><span>{Object.keys(answers).length} ta javob saqlangan</span></div><h1>{q.text}</h1>
               <div className="options" role="group" aria-label={`Javob variantlari, ${index + 1}-savol`}>{q.options.map((option, i) => <button key={option.id} type="button" className={answers[q.id] === option.key ? 'option selected' : 'option'} onClick={() => chooseAnswer(option.key)} aria-pressed={answers[q.id] === option.key}><span aria-hidden="true">{String.fromCharCode(65 + i)}</span>{option.text}</button>)}</div>
               {error && <div className="error-box" role="alert">{error}</div>}
-              <div className="exam-actions"><button className="secondary" type="button" onClick={() => goToQuestion(index - 1)} disabled={index === 0 || submitting}>← Oldingi</button><button className="primary" type="button" onClick={submitCurrent} disabled={!answers[q.id] || submitting}>{submitting ? 'Saqlanmoqda…' : index + 1 === questions.length ? 'Testni yakunlash →' : 'Keyingi savol →'}</button></div>
+              <div className="exam-actions"><button className="secondary" type="button" onClick={() => void goToQuestion(index - 1)} disabled={index === 0 || submitting}>← Oldingi</button><button className="primary" type="button" onClick={submitCurrent} disabled={!answers[q.id] || submitting}>{submitting ? 'Saqlanmoqda…' : index + 1 === questions.length ? 'Testni yakunlash →' : 'Keyingi savol →'}</button></div>
             </div>
-            <div className="question-nav" aria-label="Savol navigatsiyasi">{questions.map((item, i) => <button key={item.id} type="button" className={`${i === index ? 'current ' : ''}${answers[item.id] ? 'answered ' : ''}${marked.includes(item.id) ? 'marked' : ''}`} onClick={() => goToQuestion(i)} disabled={submitting} aria-current={i === index ? 'step' : undefined} aria-label={`${i + 1}-savol${answers[item.id] ? ', javob berilgan' : ', javobsiz'}${marked.includes(item.id) ? ', ko‘rib chiqish uchun belgilangan' : ''}`}>{i + 1}</button>)}</div>
+            <div className="question-nav" aria-label="Savol navigatsiyasi">{questions.map((item, i) => <button key={item.id} type="button" className={`${i === index ? 'current ' : ''}${answers[item.id] ? 'answered ' : ''}${marked.includes(item.id) ? 'marked' : ''}`} onClick={() => void goToQuestion(i)} disabled={submitting} aria-current={i === index ? 'step' : undefined} aria-label={`${i + 1}-savol${answers[item.id] ? ', javob berilgan' : ', javobsiz'}${marked.includes(item.id) ? ', ko‘rib chiqish uchun belgilangan' : ''}`}>{i + 1}</button>)}</div>
           </div>}
         </section>
       </div>
