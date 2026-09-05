@@ -1,5 +1,5 @@
-import './dashboard.css';
 'use client';
+import './dashboard.css';
 import {useEffect,useMemo,useState} from 'react';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
